@@ -104,3 +104,85 @@ make build
 
 # License
 [MIT](https://opensource.org/licenses/MIT)
+
+
+第二种使用方式
+<el-table
+    ref="multipleTable"
+    :data="tableData"
+    border
+    highlight-current-row
+    :height="height"
+    @row-click="rowClick"
+    @row-dblclick="rowDBclick"
+    style="width: 100%"
+    row-class-name="tb_limit"
+    @select="handleSelection"
+    @select-all="handleSelection"
+    @sort-change="handleSortChange">
+    <el-table-column
+      	type="selection"
+      	width="35">
+    </el-table-column>
+    <el-table-column
+    	v-for="line in colums"
+    	:prop="line.name"
+    	:key="line.name"
+    	:label="line.label"
+    	:width="line.width"
+    	:sortable="line.sort"
+    	:config="line">
+    </el-table-column>	
+</el-table>
+data() {
+  	return {
+  		colums:[
+  			{name:"a00",label:"序号",width:75,type:"input",sort:"custom"},
+  			{name:"a01",label:"申请人类型",width:120,type:"select",
+  				options:[
+  					{value:"土地所有权人",key:1},
+	      			{value:"建设用地使用权人",key:2},
+	      			{value:"宅基地使用权人",key:3},
+	      			{value:"房地产权利人",key:4},
+	      			{value:"海域使用权人",key:5},
+	      			{value:"土地承包经营权人",key:6},
+	      			{value:"农用地使用权人",key:7},
+	      			{value:"林权权利人",key:8},
+	      			{value:"抵押权人",key:9},
+	      			{value:"需役地权利人",key:10},
+	      			{value:"其他",key:11}
+  				]
+  			},
+  			{name:"a02",label:"共有情况",width:90,type:"select",
+  				options:[
+  					{value:"单独所有"},
+	      			{value:"共同所有"},
+	      			{value:"按份共有"},
+	      			{value:"其他共有"}
+  				]
+  			},
+  			{name:"a03",label:"申请人名称",width:200,type:"input"},
+  			{name:"a04",label:"证件种类",width:120,type:"select",
+  				options:[
+  					{value:"身份证"},
+	      			{value:"港澳台身份证"},
+	      			{value:"护照"},
+	      			{value:"户口簿"},
+	      			{value:"军官证(士兵证)"},
+	      			{value:"组织机构代码"},
+	      			{value:"营业执照"},
+	      			{value:"其他"}
+  				]
+  			},
+  			{name:"a05",label:"证件号码",width:180,type:"input",sort:"custom"},
+  			{name:"a06",label:"联系人",width:150,type:"input"},
+  			{name:"a11",label:"权利比例",width:150,type:"button",text:"确认",
+  				onTap:function(event,column,index){
+  					console.log(event);
+  				}
+  			},
+  			{name:"a12",label:"时间",width:180,type:"date"}
+  		],
+  		tableData:[]//显示数据，最终显示到表格上的数据，主要用于分页的情况
+  	}
+},
