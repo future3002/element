@@ -4,6 +4,7 @@
 @import "mixins/utils";
 
 @include b(checkbox) {
+  margin-right: 10px;
   color: $--checkbox-color;
   font-weight: $--checkbox-font-weight;
   font-size: $--font-size-base;
@@ -237,10 +238,6 @@
     padding-left: 10px;
     line-height: 19px;
     font-size: $--checkbox-font-size;
-  }
-
-  & + .el-checkbox {
-    margin-left: 30px;
   }
 }
 

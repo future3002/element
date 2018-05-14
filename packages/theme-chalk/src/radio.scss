@@ -5,6 +5,7 @@
 
 @include b(radio) {
   color: $--radio-color;
+  margin-right: 10px;
   font-weight: $--radio-font-weight;
   line-height: 1;
   position: relative;
@@ -77,10 +78,6 @@
         width: $--radio-bordered-mini-input-width;
       }
     }
-  }
-
-  & + .el-radio {
-    margin-left: 30px;
   }
 
   @include e(input) {

@@ -136,15 +136,19 @@ TableStore.prototype.mutations = {
 
     states.filteredData = data;
     states.data = sortData((data || []), states);
-
-    this.updateCurrentRow();
+		
+		if(states["simulate"]){
+			this.updateCurrentRow();
+		}
 
     if (!states.reserveSelection) {
-      if (dataInstanceChanged) {
-        this.clearSelection();
-      } else {
-        this.cleanSelection();
-      }
+    	if(states.clearSel){
+    		if (dataInstanceChanged) {
+	        this.clearSelection();
+	      } else {
+	        this.cleanSelection();
+	      }
+    	}
       this.updateAllSelected();
     } else {
       const rowKey = states.rowKey;
@@ -297,8 +301,14 @@ TableStore.prototype.mutations = {
     const selection = this.states.selection;
     // when only some rows are selected (but not all), select or deselect all of them
     // depending on the value of selectOnIndeterminate
+    var all=true;
+    for(var i=0,len=data.length;i<len;i++){
+    	if(selection.indexOf(data[i])==-1){
+      	all=false;break;
+      }
+    }
     const value = states.selectOnIndeterminate
-      ? !states.isAllSelected
+      ? states.simulate?!all:!states.isAllSelected
       : !(states.isAllSelected || selection.length);
     let selectionChanged = false;
 
@@ -318,8 +328,8 @@ TableStore.prototype.mutations = {
     if (selectionChanged) {
       table.$emit('selection-change', selection ? selection.slice() : []);
     }
-    table.$emit('select-all', selection);
-    states.isAllSelected = value;
+    table.$emit('select-all', !states.isAllSelected);
+    states.isAllSelected = (data.length==states.total)?value:(selection.length==states.total)?true:false;
   })
 };
 
@@ -483,6 +493,7 @@ TableStore.prototype.clearSort = function() {
   });
 };
 
+//判断选择是否全选，并更新显示状态
 TableStore.prototype.updateAllSelected = function() {
   const states = this.states;
   const { selection, rowKey, selectable, data } = states;
@@ -503,25 +514,27 @@ TableStore.prototype.updateAllSelected = function() {
       return selection.indexOf(row) !== -1;
     }
   };
-
-  let isAllSelected = true;
-  let selectedCount = 0;
-  for (let i = 0, j = data.length; i < j; i++) {
-    const item = data[i];
-    const isRowSelectable = selectable && selectable.call(null, item, i);
-    if (!isSelected(item)) {
-      if (!selectable || isRowSelectable) {
-        isAllSelected = false;
-        break;
-      }
-    } else {
-      selectedCount++;
-    }
-  }
-
-  if (selectedCount === 0) isAllSelected = false;
-
-  states.isAllSelected = isAllSelected;
+	
+	if(selection.length<states.total){
+		states.isAllSelected = false;
+	}else{
+		let isAllSelected = true;
+	  let selectedCount = 0;
+	  for (let i = 0, j = data.length; i < j; i++) {
+	    const item = data[i];
+	    const isRowSelectable = selectable && selectable.call(null, item, i);
+	    if (!isSelected(item)) {
+	      if (!selectable || isRowSelectable) {
+	        isAllSelected = false;
+	        break;
+	      }
+	    } else {
+	      selectedCount++;
+	    }
+	  }
+	  if (selectedCount === 0) isAllSelected = false;
+  	states.isAllSelected = isAllSelected;
+	}
 };
 
 TableStore.prototype.scheduleLayout = function(updateColumns) {

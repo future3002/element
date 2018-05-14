@@ -17,7 +17,7 @@ class TableLayout {
     this.fixedWidth = null;
     this.rightFixedWidth = null;
     this.tableHeight = null;
-    this.headerHeight = 44; // Table Header Height
+    this.headerHeight = 28; // Table Header Height
     this.appendHeight = 0; // Append Slot Height
     this.footerHeight = 44; // Table Footer Height
     this.viewportHeight = null; // Table Height - Scroll Bar Height

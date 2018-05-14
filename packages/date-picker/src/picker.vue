@@ -365,7 +365,8 @@ export default {
       showClose: false,
       userInput: null,
       valueOnOpen: null, // value when picker opens, used to determine whether to emit change
-      unwatchPickerOptions: null
+      unwatchPickerOptions: null,
+      tempVisible:false
     };
   },
 
@@ -530,11 +531,12 @@ export default {
 
   methods: {
     focus() {
-      if (!this.ranged) {
+      /*if (!this.ranged) {
         this.$refs.reference.focus();
       } else {
         this.handleFocus();
-      }
+      }*/
+      this.tempVisible=this.pickerVisible;
     },
 
     blur() {
@@ -651,6 +653,10 @@ export default {
         }
       } else {
         this.pickerVisible = !this.pickerVisible;
+      }
+      this.$emit('clear');
+      if(!this.tempVisible){
+      	this.$emit('blur', this);
       }
     },
 

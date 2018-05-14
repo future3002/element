@@ -63,6 +63,9 @@
         <slot name="append"></slot>
       </div>
     </div>
+    <div class="el-table__body-scrollbar" ref="scrollBar" :style="[bodyHeight]">
+	  	<div class="scroll_block" @mousedown="mouseDown"></div>
+	  </div>
     <div
       v-if="showSummary"
       v-show="data && data.length > 0"
@@ -243,8 +246,41 @@
           return [];
         }
       },
-
+      
       size: String,
+      
+      rowEdit: {
+      	type: Array,
+      	default: function() {
+          return [];
+        }
+      },
+      
+      rowEdit: {
+      	type: Array,
+      	default: function() {
+          return [];
+        }
+      },
+      
+      selected:{
+      	type: Array,
+      	default: function() {
+          return [];
+        }
+      },
+      
+      total:{
+      	type: Number,
+      	default: function() {
+          return this.data.length;
+        }
+      },
+      
+      simulate:{
+      	type: Boolean,
+      	default: true
+      },
 
       width: [String, Number],
 
@@ -256,7 +292,7 @@
         type: Boolean,
         default: true
       },
-
+			
       stripe: Boolean,
 
       border: Boolean,
@@ -269,7 +305,12 @@
         type: Boolean,
         default: true
       },
-
+			
+			isClearSel: {
+				type: Boolean,
+        default: true
+			},
+			
       showSummary: Boolean,
 
       sumText: String,
@@ -442,6 +483,174 @@
         if (this.shouldUpdateHeight) {
           this.layout.updateElsHeight();
         }
+        this.$nextTick(() => {
+          this.scrollBarSet();
+        });
+      },
+      
+      scrollBarSet(){
+      	var scrollBar=this.$refs.scrollBar;
+      	if(scrollBar){
+      		var body=this.bodyWrapper,table=body.querySelector(".el-table__body");
+      		var bar=scrollBar.children.item(0);
+      		if(body.offsetHeight>=table.offsetHeight){
+      			scrollBar.style.display="none";
+      			bar.style.top="";
+      			bar.style.height="";
+      			this.adjust(0);
+      		}else{
+      			scrollBar.style.display="block";
+      			var height=(body.offsetHeight*scrollBar.offsetHeight)/table.offsetHeight;
+      			if(height<20){
+      				height=20;
+      			}
+      			bar.style.height=height+"px";
+      			this.scrollHeight=scrollBar.offsetHeight;
+      			this.tableHeight=table.offsetHeight+8;
+        		this.barHeight=height;
+        		var top=bar.style.top;
+        		if(top){
+        			top=parseFloat(top.replace("px",""));
+        			if((top+height)>this.scrollHeight){
+        				top=this.scrollHeight-height;
+        			}
+        		}else{top=0;}
+        		this.adjust(top);
+      		}
+      	}
+      },
+      
+      mouseDown(e){
+      	this.isDrag=true;
+  			this.pageY=e.pageY;
+  			if(e.stopPropagation) e.stopPropagation();
+		    e.cancelBubble=true;
+		    e.returnValue=false;
+		    return false;
+      },
+      
+      mouseMove(event){
+	  		if(this.isDrag){
+	  			var tar=this.$refs.scrollBar.children.item(0);
+	  			var mv=event.pageY-this.pageY;
+	  			var top=tar.style.top;
+	  			if(top){
+						top=parseFloat(top.replace("px",""));
+						if((mv+this.barHeight+top)>this.scrollHeight){mv=this.scrollHeight-this.barHeight;}else if((mv+top)<0){mv=0;}else{mv=top+mv;}
+					}else{
+						if((mv+this.barHeight)>this.scrollHeight){mv=this.scrollHeight-this.barHeight;}else if(mv<0){mv=0;}
+					}
+					this.adjust(mv);
+	  			this.pageY=event.pageY;
+	  			if(!this.simulate){//不可分页
+	  				this.$emit('bar-scroll',event,mv,this.barHeight);
+	  			}
+	  			if(event.stopPropagation) event.stopPropagation();
+			    if(event.preventDefault) event.preventDefault();
+			    event.cancelBubble=true;
+			    event.returnValue=false;
+			    return false;
+	  		}
+      },
+      
+      adjust(mv){
+      	if(typeof mv=='number'){
+      		var tar=this.$refs.scrollBar.children.item(0);
+	      	var table=this.bodyWrapper.querySelector(".el-table__body");
+	      	tar.style.top=mv+"px";
+	      	//到了这里mv代表的就是新的top属性  这是常规算法
+					table.style.marginTop=-(mv*(this.tableHeight-this.scrollHeight))/(this.scrollHeight-this.barHeight)+"px";
+      	}
+      },
+      
+      mouseUp(e){
+      	if(this.isDrag){
+					this.isDrag = false;
+					if (e.stopPropagation) e.stopPropagation();
+					e.cancelBubble = true;
+					e.returnValue = false;
+					return false;  
+			  }
+      },
+      
+      mouseLeave(event){
+      	this.isDrag=false;
+      },
+      
+      mouseWeel(event){
+      	event = event || window.event;
+      	var tar=this.bodyWrapper;
+      	var target=event.target;
+      	if(tar.contains(target)){
+      		var scrollBar=this.$refs.scrollBar;
+      		var bar=scrollBar.children.item(0);
+					var resize=this.simulate?1:(100/this.total);
+      		var top=bar.style.top,step=(100*this.scrollHeight*resize)/this.tableHeight;
+      		if(scrollBar.style.display!="none"){
+      			top=parseFloat(top.replace("px",""));
+	      		if (event.wheelDelta) {  //判断浏览器IE，谷歌滑轮事件    
+	            //当滑轮向上滚动时
+	            if (event.wheelDelta > 0) {
+	            	if((top-step)<=0){
+	            		this.adjust(0);
+	            	}else{
+	            		this.adjust(top-step);
+	            	}
+	            	if(top>0){
+	            		if(event.stopPropagation) event.stopPropagation();
+							    if(event.preventDefault) event.preventDefault();
+							    event.cancelBubble=true;
+							    event.returnValue=false;
+							    return false;
+	            	}
+	            }
+	            //当滑轮向下滚动时  
+	            if (event.wheelDelta < 0) {
+	            	if((top+step+this.barHeight)>=this.scrollHeight){
+	            		this.adjust(this.scrollHeight-this.barHeight);
+	            	}else{
+	            		this.adjust(top+step);
+	            	}
+	            	if((top+this.barHeight)<(this.scrollHeight-0.01)){
+	            		if(event.stopPropagation) event.stopPropagation();
+							    if(event.preventDefault) event.preventDefault();
+							    event.cancelBubble=true;
+							    event.returnValue=false;
+							    return false;
+	            	}
+	            }
+		        } else if (event.detail) {  //Firefox滑轮事件  
+	            if (event.detail< 0) {
+	            	if((top-step)<=0){
+	            		this.adjust(0);
+	            	}else{
+	            		this.adjust(top-step);
+	            	}
+	            	if(top>0){
+	            		if(event.stopPropagation) event.stopPropagation();
+							    if(event.preventDefault) event.preventDefault();
+							    event.cancelBubble=true;
+							    event.returnValue=false;
+							    return false;
+	            	}
+	            }
+	            if (event.detail> 0) {
+	            	if((top+step+this.barHeight)>=this.scrollHeight){
+	            		this.adjust(this.scrollHeight-this.barHeight);
+	            	}else{
+	            		this.adjust(top+step);
+	            	}
+	            	if((top+this.barHeight)<this.scrollHeight){
+	            		if(event.stopPropagation) event.stopPropagation();
+							    if(event.preventDefault) event.preventDefault();
+							    event.cancelBubble=true;
+							    event.returnValue=false;
+							    return false;
+	            	}
+	            }
+		        }
+      		}
+      	}
       }
     },
 
@@ -548,6 +757,10 @@
             height: this.layout.viewportHeight ? this.layout.viewportHeight + 'px' : ''
           };
         }
+      },
+      
+      dataDiff(){
+      	return null;
       }
     },
 
@@ -580,6 +793,28 @@
             });
           }
         }
+      },
+      
+      rowEdit(newVal) {
+      	this.store.rowEdit=newVal;
+      	if (this.$ready) {
+	        this.$nextTick(() => {
+	          this.scrollBarSet();
+	        });
+	      }
+      },
+      
+      selected(newVal) {
+      	this.store.states.selection=newVal;
+      	this.store.updateAllSelected();
+      },
+      
+      total(newVal){
+      	this.store.states.total=newVal;
+      },
+      
+      simulate(newVal){
+      	this.store.states.simulate=newVal;
       },
 
       expandRowKeys: {
@@ -618,6 +853,17 @@
       });
 
       this.$ready = true;
+      this.$nextTick(function(){
+      	this.$nextTick(function(){
+		      this.scrollBarSet();
+		      if(mouseEvent){
+		      	mouseEvent.addEvent(this,this.mouseMove,"mousemove");
+			      mouseEvent.addEvent(this,this.mouseUp,"mouseup");
+			      mouseEvent.addEvent(this,this.mouseLeave,"mouseleave");
+			      mouseEvent.addEvent(this,this.mouseWeel);
+		      }
+		    });
+	    });
     },
 
     data() {
@@ -626,6 +872,11 @@
         defaultExpandAll: this.defaultExpandAll,
         selectOnIndeterminate: this.selectOnIndeterminate
       });
+      store["rowEdit"]=this.rowEdit;
+      store.states["clearSel"]=this.isClearSel;
+      store.states["total"]=this.total;
+      store.states["simulate"]=this.simulate;
+      store.states.selection=this.selected;
       const layout = new TableLayout({
         store,
         table: this,
@@ -644,7 +895,12 @@
         },
         // 是否拥有多级表头
         isGroup: false,
-        scrollPosition: 'left'
+        scrollPosition: 'left',
+        scrollHeight:0,
+        tableHeight:0,
+        barHeight:0,
+        isDrag:false,
+        pageY:0
       };
     }
   };

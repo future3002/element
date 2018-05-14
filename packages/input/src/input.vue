@@ -24,6 +24,7 @@
         v-if="type !== 'textarea'"
         class="el-input__inner"
         v-bind="$attrs"
+        :type="type"
         :disabled="inputDisabled"
         :autocomplete="autoComplete"
         :value="currentValue"
@@ -288,8 +289,10 @@
     mounted() {
       this.resizeTextarea();
       if (this.isGroup) {
-        this.prefixOffset = this.calcIconOffset('pre');
-        this.suffixOffset = this.calcIconOffset('suf');
+      	this.$nextTick(function(){
+					this.prefixOffset = this.calcIconOffset('pre');
+					this.suffixOffset = this.calcIconOffset('suf');  
+			  });
       }
     }
   };

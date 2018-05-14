@@ -56,7 +56,6 @@ const forced = {
     renderCell: function(h, { $index, column }) {
       let i = $index + 1;
       const index = column.index;
-
       if (typeof index === 'number') {
         i = $index + index;
       } else if (typeof index === 'function') {
@@ -143,6 +142,12 @@ export default {
     type: {
       type: String,
       default: 'default'
+    },
+    config: {
+    	type: Object,
+    	default: function(){
+    		return {};
+    	}
     },
     label: String,
     className: String,
@@ -236,6 +241,8 @@ export default {
 
     let column = getDefaultColumn(type, {
       id: this.columnId,
+      keys:this.config.name,
+      config:this.config,
       columnKey: this.columnKey,
       label: this.label,
       className: this.className,
