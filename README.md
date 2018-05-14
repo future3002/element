@@ -81,7 +81,7 @@
 
 ## Install
 ```shell
-npm install element-ui -S
+npm install element-opt-zbs -S
 ```
 
 ## Quick Start
